@@ -13,7 +13,7 @@
 
 <meta name="date" content="2017-07-12" />
 
-<title>Workshop</title>
+<title>workshopreport2</title>
 
 <script src="site_libs/jquery-1.11.3/jquery.min.js"></script>
 <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -302,13 +302,15 @@ div.tocify {
 
 
 
-<h1 class="title toc-ignore">Workshop</h1>
+<h1 class="title toc-ignore">workshopreport2</h1>
 <h4 class="author"><em>Awtum</em></h4>
 <h4 class="date"><em>July 12, 2017</em></h4>
 
 </div>
 
 
+<div id="r-markdown-report-2" class="section level2">
+<h2>R markdown report 2</h2>
 <p>load libraries and datasets #source(“<a href="http://bioconductor.org/biocLite.R" class="uri">http://bioconductor.org/biocLite.R</a>”) #biocLite(“Biobase”) #biocLite(“genefilter”) #devtools::install_github(“genomicsclass/GSE5859”)</p>
 <pre class="r"><code>library(Biobase)</code></pre>
 <pre><code>## Loading required package: BiocGenerics</code></pre>
@@ -341,8 +343,6 @@ div.tocify {
 library(genefilter)
 library(GSE5859)
 data(GSE5859)</code></pre>
-<div id="r-markdown-report-1" class="section level2">
-<h2>R markdown report 1</h2>
 <div id="gene-expression-levels" class="section level3">
 <h3>gene expression levels</h3>
 <pre class="r"><code>geneExpression = exprs(e)</code></pre>
@@ -363,22 +363,34 @@ print(tab)</code></pre>
 ##   05  80   3   0
 ##   06   2   0  24</code></pre>
 </div>
-<div id="differential-expression-analysis" class="section level3">
-<h3>Differential expression analysis</h3>
-<p>remove control genes</p>
-<pre class="r"><code>out &lt;- grep(&quot;AFFX&quot;,rownames(geneExpression))</code></pre>
-<p>Use a t-test to perform differential expression analysis between CEU and ASN</p>
-<pre class="r"><code>eth &lt;- sampleInfo$ethnicity
-ind&lt;- which(eth%in%c(&quot;CEU&quot;,&quot;ASN&quot;))
-res1 &lt;- rowttests(geneExpression[-out,ind],droplevels(eth[ind]))</code></pre>
-<p>Use a t-test to perform differential expression analysis between 2002 vs 2003 within CEU</p>
-<pre class="r"><code>ind &lt;- which(year%in%c(&quot;02&quot;,&quot;03&quot;) &amp; eth==&quot;CEU&quot;)
-res2 &lt;- rowttests(geneExpression[-out,ind],droplevels(year[ind]))</code></pre>
-<p>output: plot histograms for p-values</p>
-<pre class="r"><code>hist(res1$p, main=&quot;p-value of CEU vs ASN&quot;)</code></pre>
-<p><img src="workshopreport_files/figure-html/unnamed-chunk-7-1.png" width="672" /></p>
-<pre class="r"><code>hist(res2$p, main=&quot;p-value of 2002 vs 2003 for CEU&quot;)</code></pre>
-<p><img src="workshopreport_files/figure-html/unnamed-chunk-7-2.png" width="672" /></p>
+<div id="remove-a-redundant-sample" class="section level3">
+<h3>remove a redundant sample</h3>
+<pre class="r"><code>cors &lt;- cor(exprs(e))
+Pairs=which(abs(cors)&gt;0.9999,arr.ind=TRUE)
+out = Pairs[which(Pairs[,1]&lt;Pairs[,2]),,drop=FALSE]
+if(length(out[,2])&gt;0) e=e[,-out[2]]</code></pre>
+<p>remove control probes from the analysis</p>
+<pre class="r"><code>out &lt;- grep(&quot;AFFX&quot;,featureNames(e))
+e &lt;- e[-out,]</code></pre>
+<p>Create a detrended gene expression data matrix and extract the information on dates and ethnic group</p>
+<pre class="r"><code>y &lt;- exprs(e)-rowMeans(exprs(e))
+dates &lt;- pData(e)$date
+eth &lt;- pData(e)$ethnicity</code></pre>
+<p>perform PCA</p>
+<pre class="r"><code>s &lt;- svd(y)</code></pre>
+<p>output: plot MDS plot of PC1 and PC2 for ethnic groups</p>
+<pre class="r"><code>cols = as.numeric(eth)
+mypar()
+plot(s$v[,1],s$v[,2],col=cols,pch=16, xlab=&quot;PC1&quot;,ylab=&quot;PC2&quot;)
+legend(&quot;bottomleft&quot;,levels(eth),col=seq(along=levels(eth)),pch=16)
+title(&quot;Ethnic groups&quot;)</code></pre>
+<p><img src="workshopreport2_files/figure-html/unnamed-chunk-8-1.png" width="672" /> output: plot PC1 and PC2 for years</p>
+<pre class="r"><code>cols = as.numeric(year)
+mypar()
+plot(s$v[,1],s$v[,2],col=cols,pch=16, xlab=&quot;PC1&quot;,ylab=&quot;PC2&quot;)
+legend(&quot;bottomleft&quot;,levels(year),col=seq(along=levels(year)),pch=16)
+title(&quot;Years&quot;)</code></pre>
+<p><img src="workshopreport2_files/figure-html/unnamed-chunk-9-1.png" width="672" /></p>
 </div>
 </div>
 
