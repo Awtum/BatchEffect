@@ -12,6 +12,7 @@ This is a study of batch effect
 
 ###Analysis
 Report1[link](workshopreport.html)
+<br>
 Report2[link](workshopreport2.html)
 
 
